@@ -1,0 +1,85 @@
+import csvtojson from 'csvtojson'
+import fs from 'fs'
+import { join } from 'path'
+import { converge, map, mergeAll, pipe, prop, uniq } from 'ramda'
+
+// accepts a message and returns a function that when provided an argument
+// will log to the console the string provided along with the argument
+const logPass = (msg: string) => (arg: any) => {
+  console.log(msg, arg);
+  return arg;
+};
+
+// return an array from the arguments provided
+const makeArray = (...args: any[]) => Array.from(args);
+
+// a function to build an object from an array with the given label
+const encapsulate = (label: string) => (arg: any) =>
+  Object.assign({}, { [label]: arg });
+
+// a helper function to curry the pipe function
+const fn = (fn: (arg: any) => any) => (arg: any) => fn(arg);
+
+// returns a function that accepts a string n and returns a function that accepts
+// an array of objects and returns an object labeled n containing an array of the unique
+// values found for the property n of the received object
+const extractPropUniqueValues = (label: string) =>
+  pipe(map(prop(label)), uniq, encapsulate(label));
+
+// returns a function that expects an array of objects X and returns an object
+// containing the unique values of properties target, equipment and set of object X
+// and another object labeled exercises containing the original object X
+const process = pipe(
+  converge(pipe(makeArray, mergeAll), [
+    extractPropUniqueValues("target"),
+    extractPropUniqueValues("equipment"),
+    extractPropUniqueValues("set"),
+    pipe(
+      map((exercise: any) => {
+        const id = exercise.id as string;
+        delete exercise.id;
+        return { [id]: { ...exercise } };
+      }),
+      encapsulate("exercises")
+    )
+  ])
+);
+
+export const parseData = async () => {
+  const raw = await csvtojson({ delimiter: ";" }).fromFile(
+    join(__dirname, "data.source/exList-exList.csv")
+  );
+  return fn(process)(raw);
+};
+
+const unfoldIntensity = (intensity: any) => {
+  const {
+    ex,
+    re,
+    total: { exercise, rest }
+  } = intensity;
+  return { ex, re, exercise, rest };
+};
+
+export const parseDistribution = async () => {
+  const raw = await csvtojson({ delimiter: ";" }).fromFile(
+    join(__dirname, "data.source/algorithm-durationDistribution.csv")
+  );
+  return raw.reduce((prev, { dur }) => {
+    prev["dur" + dur.minutes] = {
+      minutes: dur.minutes,
+      seconds: dur.seconds,
+      intensity1: unfoldIntensity(dur.intensity1)
+    };
+    return prev;
+  }, {});
+};
+
+// usin yarn run data.parse will write the parsed data to the mock
+// repo to be served in json by typicode
+parseData().then(res => {
+  // console.log(res)
+  fs.writeFile("../absapp_mock_db/data.json", JSON.stringify(res), err =>
+    console.log(err)
+  );
+});
