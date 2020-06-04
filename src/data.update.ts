@@ -1,9 +1,8 @@
 import fs from 'fs'
 import { equals, forEachObjIndexed, has, prop } from 'ramda'
 
-import { db, exercises } from './data.firestore'
-
-const fetchLocalData = require("./data.fetch");
+import * as exercisesLocal from '../data/exercises.json'
+import { db, exerciseCollection } from './data.firestore'
 
 //: Check and update remote data upon local data
 const fetchAndCheck = async (
@@ -17,13 +16,13 @@ const fetchAndCheck = async (
     return "script failed:\nlocal data could not be fetched...";
   }
 
-  //= if there is no document from remote rebuild
+  //= if there is no document from remote: rebuild
   //= the exercises collection
   if (!remoteData.length) {
     const batch = db.batch();
 
     forEachObjIndexed((value, key) => {
-      batch.set(exercises.doc(key), value);
+      batch.set(exerciseCollection.doc(key), value);
     })(localData);
 
     try {
@@ -50,13 +49,13 @@ const fetchAndCheck = async (
     //= check if item is missing in remote
     if (!has(key as string, remoteDocs)) {
       jobs.push(`added: ${value.name}`);
-      batch.set(exercises.doc(key as string), value);
+      batch.set(exerciseCollection.doc(key as string), value);
     }
 
     //= if exists then check if needs update
     else if (!equals(value, prop(key as string)(remoteDocs))) {
       jobs.push(`updated: ${value.name}`);
-      batch.update(exercises.doc(key as string), value);
+      batch.update(exerciseCollection.doc(key as string), value);
     }
   }, localData);
 
@@ -91,21 +90,22 @@ standard_input.on("data", function (data: string) {
   } else {
     // Print user input in console.
     console.log("\nprocessing...\n");
-    fetchLocalData().then((localData: any) => {
-      console.log("local data fetched!\n");
-      //= write the JSON base data file for flutter
-      fs.writeFileSync(
-        "/Users/potter/Developer/Projects/AbsApp/dev/abs_up/assets/data/exercises.json",
-        JSON.stringify(localData)
-      );
-      exercises.get().then((snapshot) => {
-        console.log("remote data fetched!\n");
-        const remoteData = snapshot.docs;
-        fetchAndCheck(localData, remoteData).then((result) => {
-          console.log(result);
-          process.exit(0);
-        });
+
+    exerciseCollection.get().then((snapshot) => {
+      console.log("remote data fetched!\n");
+      const remoteData = snapshot.docs;
+      fetchAndCheck(exercisesLocal, remoteData).then((result) => {
+        console.log(result);
+        process.exit(0);
       });
     });
   }
 });
+
+// fetchLocalData().then((localData: any) => {
+//   console.log("local data fetched!\n");
+//   //= write the JSON base data file for flutter
+//   fs.writeFileSync(
+//     "/Users/potter/Developer/Projects/AbsApp/dev/abs_up/assets/data/exercises.json",
+//     JSON.stringify(localData)
+//   );
