@@ -1,7 +1,4 @@
 {
-  "database": {
-    "rules": "database.rules.json"
-  },
   "firestore": {
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
@@ -22,15 +19,12 @@
     "firestore": {
       "port": 8081
     },
-    "database": {
-      "port": 8082
-    },
     "pubsub": {
-      "port": 8085
+      "port": 8082
     },
     "ui": {
       "enabled": true,
-      "port": 8090
+      "port": 8083
     }
   }
 }
