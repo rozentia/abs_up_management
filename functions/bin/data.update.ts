@@ -1,10 +1,9 @@
-import fs from 'fs'
 import { equals, forEachObjIndexed, has, prop } from 'ramda'
 
-import * as exercisesLocal from '../../data/'
-import { db, exerciseCollection } from './data.firestore'
+import * as exercisesLocal from '../data/exercises.json'
+import { db, exerciseCollection } from './admin'
 
-//: Check and update remote data upon local data
+//= Check and update remote data upon local data
 const fetchAndCheck = async (
   localData: any,
   remoteData: FirebaseFirestore.QueryDocumentSnapshot<
@@ -19,14 +18,14 @@ const fetchAndCheck = async (
   //= if there is no document from remote: rebuild
   //= the exercises collection
   if (!remoteData.length) {
-    const batch = db.batch();
+    const _batch = db.batch();
 
     forEachObjIndexed((value, key) => {
       batch.set(exerciseCollection.doc(key), value);
     })(localData);
 
     try {
-      await batch.commit();
+      await _batch.commit();
     } catch (e) {
       return `failed to commit the batch to firestore...\n${e}`;
     }
@@ -66,8 +65,8 @@ const fetchAndCheck = async (
   return "there was nothing to sync...\n";
 };
 
-//: Main function
-var standard_input = process.stdin;
+//= Main function
+const standard_input = process.stdin;
 standard_input.setEncoding("utf-8");
 console.log(`
 ************************************
@@ -91,9 +90,11 @@ standard_input.on("data", function (data: string) {
     // Print user input in console.
     console.log("\nprocessing...\n");
 
+    // tslint:disable-next-line: no-floating-promises
     exerciseCollection.get().then((snapshot) => {
       console.log("remote data fetched!\n");
       const remoteData = snapshot.docs;
+      // tslint:disable-next-line: no-floating-promises
       fetchAndCheck(exercisesLocal, remoteData).then((result) => {
         console.log(result);
         process.exit(0);

@@ -3,11 +3,17 @@
   "scripts": {
     "lint": "tslint --project tsconfig.json",
     "build": "tsc",
-    "serve": "npm run build && firebase emulators:start --only functions",
+    "serve:functions": "npm run build && firebase emulators:start --only functions",
+    "serve:all": "firebase emulators:start",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
-    "logs": "firebase functions:log"
+    "logs": "firebase functions:log",
+    "test": "mocha --timeout 5000 --watch",
+    "rules:sync:firestore": "cp rules/firestore.rules ../firestore.rules",
+    "rules:sync:indexes": "cp rules/firestore.indexes.json ../firestore.indexes.json",
+    "rules:sync:storage": "cp rules/storage.rules ../storage.rules",
+    "rules:sync": "npm-run-all --parallel rules:sync:*"
   },
   "engines": {
     "node": "8"
@@ -15,6 +21,9 @@
   "main": "lib/index.js",
   "dependencies": {
     "firebase-admin": "^8.10.0",
+    "uuid": "^8.1.0",
+    "ramda": "^0.27.0",
+    "moment": "^2.26.0",
     "firebase-functions": "^3.6.1"
   },
   "devDependencies": {
@@ -24,15 +33,15 @@
     "@types/node": "^14.0.11",
     "@types/ramda": "^0.27.6",
     "@types/uuid": "^8.0.0",
+    "esm": "^3.2.25",
     "faker": "^4.1.0",
     "firebase-functions-test": "^0.2.0",
     "mocha": "^7.2.0",
-    "moment": "^2.26.0",
-    "ramda": "^0.27.0",
+    "npm-run-all": "^4.1.5",
+    "resnap": "^1.0.1",
     "ts-node": "^8.10.2",
     "tslint": "^5.12.0",
-    "typescript": "^3.8.0",
-    "uuid": "^8.1.0"
+    "typescript": "^3.8.0"
   },
   "private": true
 }
