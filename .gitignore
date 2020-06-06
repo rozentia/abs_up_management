@@ -63,3 +63,6 @@ node_modules/
 
 # dotenv environment variables file
 .env
+/.blackbox/pubring.gpg~
+/.blackbox/pubring.kbx~
+/.blackbox/secring.gpg
