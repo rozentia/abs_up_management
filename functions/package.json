@@ -1,5 +1,5 @@
 {
-  "name": "functions",
+  "name": "abs_up_functions",
   "scripts": {
     "lint": "tslint --project tsconfig.json",
     "build": "tsc",
@@ -9,11 +9,7 @@
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
-    "test": "mocha --timeout 5000 --watch",
-    "rules:sync:firestore": "cp rules/firestore.rules ../firestore.rules",
-    "rules:sync:indexes": "cp rules/firestore.indexes.json ../firestore.indexes.json",
-    "rules:sync:storage": "cp rules/storage.rules ../storage.rules",
-    "rules:sync": "npm-run-all --parallel rules:sync:*"
+    "test": "mocha --timeout 5000 --watch"
   },
   "engines": {
     "node": "8"
